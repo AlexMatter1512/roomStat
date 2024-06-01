@@ -14,7 +14,7 @@ spark.sparkContext.setLogLevel("WARN")
 kafka_topic = "macs"
 
 # Define the Kafka broker address
-kafka_broker = "contabo_server:9092"
+kafka_broker = "broker:9092"
 
 # Read data from Kafka topic as a DataFrame
 df = spark \
@@ -39,8 +39,6 @@ query = distinct_macs \
     .outputMode("complete") \
     .format("console") \
     .start()
-
-query2
 
 # Wait for the query to terminate
 query.awaitTermination()

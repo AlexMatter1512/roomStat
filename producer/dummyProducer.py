@@ -2,6 +2,7 @@ import csv
 from kafka import KafkaProducer
 import json
 import os
+import time
 
 # Function to read data from a file
 def read_data(file_path):
@@ -32,11 +33,14 @@ def main():
         return
     
     kafka_topic = 'macs'  # Update this to your Kafka topic
-    kafka_server = 'contabo_server:9092'  # Update this to your Kafka server
+    kafka_server = 'broker:9092'  # Update this to your Kafka server
 
     data = read_data(file_path)
     send_to_kafka(data, kafka_topic, kafka_server)
 
 if __name__ == '__main__':
-    main()
-    print("Data sent to Kafka successfully.")
+    while (True):    
+        main()
+        print("Data sent to Kafka successfully.")
+        # sleep for 5 seconds
+        time.sleep(5)
