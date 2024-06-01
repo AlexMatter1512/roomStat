@@ -1,16 +1,3 @@
-/*
-  Scan
-
-  This example scans for Bluetooth® Low Energy peripherals and prints out their advertising details:
-  address, local name, advertised service UUID's.
-
-  The circuit:
-  - Arduino MKR WiFi 1010, Arduino Uno WiFi Rev2 board, Arduino Nano 33 IoT,
-    Arduino Nano 33 BLE, or Arduino Nano 33 BLE Sense board.
-
-  This example code is in the public domain.
-*/
-
 #include <ArduinoBLE.h>
 
 void setup() {
@@ -25,17 +12,17 @@ void setup() {
   }
 
   Serial.println("Bluetooth® Low Energy Central scan");
-
+  BLE.setEventHandler(BLEDiscovered, bleDiscoveredCallback);
   // start scanning for peripheral
-  BLE.scan();
+  BLE.scan(true);
 }
 
 void loop() {
-  // check if a peripheral has been discovered
-  BLEDevice peripheral = BLE.available();
+  BLE.poll();
+}
 
-  if (peripheral) {
-    Serial.print(peripheral.address()+",");
-    Serial.println(peripheral.rssi());
-  }
+void bleDiscoveredCallback(BLEDevice peripheral) {
+  Serial.print(peripheral.address());
+  Serial.print(",");
+  Serial.println(peripheral.rssi());
 }

@@ -38,7 +38,7 @@ services:
     volumes:
       - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       # - ./fluentbit/parsers.conf:/fluent-bit/etc/parsers.conf
-      - ./producer/macs.log:/var/log/macs.log
+      - ./producer/logs:/var/log
     depends_on:
       - broker
     command: /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf
@@ -58,3 +58,10 @@ services:
     volumes:
       - ./spark/python:/opt/spark/work-dir
     command: "/opt/spark/bin/spark-submit --conf spark.driver.extraJavaOptions='-Divy.cache.dir=/tmp -Divy.home=/tmp' --master local --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1 /opt/spark/work-dir/readkafka.py"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    mem_limit: 1 GB

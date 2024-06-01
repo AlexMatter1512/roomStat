@@ -1,10 +1,7 @@
 from pyspark.sql import SparkSession
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import countDistinct, approx_count_distinct
-from pyspark.sql.functions import split
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import countDistinct, approx_count_distinct, col, current_timestamp, expr
+from pyspark.sql.functions import from_json
 from pyspark.sql.types import StructType
-
 import os
 
 BROKER = os.environ.get('BROKER', 'broker:9092')
@@ -21,7 +18,7 @@ if not TOPIC:
 
 def main():
     # Create a SparkSession
-    spark: SparkSession = SparkSession.builder \
+    spark = SparkSession.builder \
         .appName("KafkaReader") \
         .getOrCreate()
 
@@ -35,27 +32,32 @@ def main():
         .option("subscribe", TOPIC) \
         .load()
     
-    # the default schema of kafka message is key, value and other stuff, but the entire json message is in the "value" column
-    # Define our custom schema of the data which has to match the json message (column whose names not match will have null data)
+    # Define schema
     schema = StructType() \
         .add("mac", "string") \
         .add("rssi", "integer") \
         .add("timestamp", "double")
     
-    # Extract the value column from the Kafka message and parse it in JSON format
-    # this will create a dataframe with a single column named "parsed_value" which contains the parsed json message
+    # Extract and parse JSON data
     df = df.select(from_json(col("value").cast("string"), schema).alias("parsed_value"))
-    df.printSchema()
-    # this will create a dataframe with columns "mac", "rssi" and "@timestamp" which are the keys of the json message
     df = df.select("parsed_value.*")
-    df.printSchema()
 
+    # Convert the timestamp from double to timestamp type
+    #df = df.withColumn("@timestamp", (col("@timestamp")).cast("timestamp"))
     
-
+    # Filter data to include only the last 30 seconds
+    df_filtered = df.withColumn("current_time", current_timestamp())
+    # cast the current_time to double to match the timestamp
+    df_filtered = df_filtered.withColumn("current_time", (col("current_time")).cast("double"))
+    df_filtered = df_filtered.withColumn("time_diff", expr("current_time - timestamp"))
+    # df_filtered = df_filtered.filter(col("time_diff") <= 30)
+    # df_filtered = df_filtered.withColumn("time_diff", date_diff(col("current_time"), col("@timestamp")))
+    # df_filtered = df_filtered.filter(col("time_diff") <= 30)
+    
     # Count the number of distinct MAC addresses
-    distinct_macs = df.agg(approx_count_distinct("mac").alias("distinct_macs"))
+    distinct_macs = df_filtered.agg(approx_count_distinct("mac").alias("distinct_macs"))
 
-    # add column approx_people considering each person has 3 devices
+    # Add column approx_people considering each person has 3 devices
     distinct_macs = distinct_macs.withColumn("approx_people", col("distinct_macs") / 3)
 
     # Start the streaming query
@@ -64,12 +66,15 @@ def main():
         .outputMode("complete") \
         .format("console") \
         .start()
-    query2 = df \
+    
+    # Optionally, you can also start another query to see the raw data being filtered
+    query2 = df_filtered \
         .writeStream \
         .outputMode("append") \
         .format("console") \
         .start()
-    # Wait for the query to terminate
+    
+    # Wait for the queries to terminate
     query.awaitTermination()
     query2.awaitTermination()
 
