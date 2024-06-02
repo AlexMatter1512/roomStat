@@ -1,30 +1,27 @@
-from pyspark.sql import SparkSession
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import countDistinct, approx_count_distinct
-from pyspark.sql.functions import split
-from pyspark.sql.functions import from_json, col
-from pyspark.sql.types import StructType
-from pyspark.sql.functions import window
 import os
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import from_json, col, approx_count_distinct, window
+from pyspark.sql.types import StructType
+from pyspark.conf import SparkConf
 
+# KAFKA
 BROKER = os.environ.get('BROKER', 'broker:9092')
 TOPIC = os.environ.get('TOPIC', 'macs')
-FallbackBroker = 'broker:9092'
-FallbackTopic = 'macs'
-
-if not BROKER:
-    print('No broker specified, using default:', FallbackBroker)
-    BROKER = FallbackBroker
-if not TOPIC:
-    print('No topic specified, using default:', FallbackTopic)
-    TOPIC = FallbackTopic
+# ELASTICSEARCH
+ELASTIC_HOST = os.environ.get('ELASTIC', 'elasticsearch')
+ELASTIC_PORT = os.environ.get('ELASTIC_PORT', '9200')
+INDEX = os.environ.get('INDEX', 'macs')
 
 def main():
-    # Create a SparkSession
+
+    #SparkSession
+    sparkConf = SparkConf().set("es.nodes", ELASTIC_HOST).set("es.port", ELASTIC_PORT)
     spark: SparkSession = SparkSession.builder \
-        .appName("KafkaReader") \
+        .appName("roomStat") \
+        .config(conf=sparkConf) \
         .getOrCreate()
 
+    #Lower the log level
     spark.sparkContext.setLogLevel("WARN")
     
     # Read data from Kafka topic as a DataFrame
@@ -72,10 +69,7 @@ def main():
         .writeStream \
         .format("es") \
         .option("checkpointLocation", "checkpoints") \
-        .option("es.nodes", "elasticsearch") \
-        .option("es.port", "9200") \
-        .option("es.resource", "macs") \
-        .start()
+        .start(INDEX)
     
     # Start the streaming query
     query = distinct_macs \
