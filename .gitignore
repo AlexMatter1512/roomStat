@@ -1,6 +1,6 @@
 .venv
 .venv*
-
+*.log
 .DS_Store
 
 spark-3.5.1-bin-hadoop3
