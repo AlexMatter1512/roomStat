@@ -1,0 +1,7 @@
+services:
+    fluentbit:
+      image: fluent/fluent-bit
+      container_name: fluentbit
+      volumes:
+        - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+        - ../producer/logs:/var/log
