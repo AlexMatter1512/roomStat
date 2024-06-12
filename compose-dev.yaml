@@ -49,7 +49,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./spark/python:/opt/spark/work-dir
-    command: "/opt/spark/bin/spark-submit --conf spark.driver.extraJavaOptions='-Divy.cache.dir=/tmp -Divy.home=/tmp' --master local --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1,org.elasticsearch:elasticsearch-spark-30_2.12:8.13.4 /opt/spark/work-dir/spark_KtoE_pred.py"
+    command: "/opt/spark/bin/spark-submit --conf spark.driver.extraJavaOptions='-Divy.cache.dir=/tmp -Divy.home=/tmp' --master local --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1,org.elasticsearch:elasticsearch-spark-30_2.12:8.13.4 /opt/spark/work-dir/spark_KtoE_train_pred.py"
 
   # sparkEnv:
   #   image: apache/spark:3.4.2

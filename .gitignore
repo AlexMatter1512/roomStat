@@ -7,3 +7,4 @@ spark-3.5.1-bin-hadoop3
 spark/python/checkpoints/
 
 kafka_2.13-3.7.0
+checkpoint/

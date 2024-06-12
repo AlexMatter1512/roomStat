@@ -5,6 +5,7 @@ from pyspark.sql.types import StructType, TimestampType
 from pyspark.conf import SparkConf
 from pyspark.ml.classification import LogisticRegressionModel
 from pyspark.ml.feature import VectorAssembler
+from pyspark.sql.functions import when
 
 # KAFKA
 BROKER = os.environ.get('BROKER', 'broker:9092')
@@ -85,7 +86,11 @@ def main():
 
     # # Predict the suggestion
     roomDf = lr.transform(roomDf) # add the prediction column to the dataframe
-    roomDf = roomDf.select("mac", "rssi", "temperature", "humidity", "light", "prediction", "timestamp")
+
+    # add the prediction_str column that maps 0 to comfortable and 1 to not comfortable
+    roomDf = roomDf.withColumn("prediction_str", when(col("prediction") == 1, "comfortable").otherwise("not comfortable"))
+
+    roomDf = roomDf.select("mac", "rssi", "temperature", "humidity", "light", "prediction", "prediction_str", "timestamp")
     # roomDf.printSchema()
 
     # Write the dataframe to elasticsearch
@@ -107,11 +112,11 @@ def main():
         .start()
     
     # elasticsearch query
-    # roomDf \
-    #     .writeStream \
-    #     .format("es") \
-    #     .option("checkpointLocation", "./checkpoint") \
-    #     .start(INDEX)
+    roomDf \
+        .writeStream \
+        .format("es") \
+        .option("checkpointLocation", "./checkpoint") \
+        .start(INDEX)
     
     query.awaitTermination()
 

@@ -5,7 +5,7 @@ import argparse
 import os
 import random
 
-REMOVE_LOGFILE = os.environ.get('REMOVE_LOGFILE', True)
+REMOVE_LOGFILE = os.environ.get('REMOVE_LOGFILE', False)
 PRODUCER_LOGFILE = os.environ.get('LOGFILE', 'logs/data.log')
 
 def find_serial_port(pattern):

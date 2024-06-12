@@ -34,8 +34,6 @@ def main():
     
     # print the true positives, false positives, true negatives, and false negatives
     test_results.groupBy('label', 'prediction').count().show()
-    #print the total number of records in the test data
-    print(f"Total records: {test_results.count()}")
 
     print(f"Model accuracy: {accuracy}")
 
